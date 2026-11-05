@@ -1,0 +1,23 @@
+{
+  "name": "sagasu",
+  "version": "0.1.0",
+  "description": "Zero-dependency full-text search for static sites that actually understands Japanese: kana/width folding, romaji input, typo tolerance, BM25, highlighting, and a ⌘K web component.",
+  "type": "module",
+  "license": "MIT",
+  "author": "sanofc",
+  "keywords": ["search", "full-text-search", "japanese", "static-site", "astro", "bm25", "n-gram", "romaji", "web-component"],
+  "exports": {
+    ".": { "types": "./src/index.d.ts", "default": "./src/index.js" },
+    "./html": "./src/html.js",
+    "./ui": "./src/ui.js"
+  },
+  "types": "./src/index.d.ts",
+  "bin": { "sagasu": "bin/sagasu.js" },
+  "files": ["src", "bin"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test 'test/*.test.js'",
+    "bench": "node bench/bench.js",
+    "demo": "node demo/build.js"
+  }
+}
