@@ -32,7 +32,16 @@ export function decodeEntities(s) {
 }
 
 const hasAttr = (attrs, name) => new RegExp(`(?:^|\\s)${name}(?:\\s|=|/|$)`, 'i').test(attrs);
-const clean = (s) => decodeEntities(s).replace(/\s+/g, ' ').trim();
+
+// Inline tag boundaries are marked with GLUE while walking. Between two latin
+// letters/digits they become a space (<span>Solo</span><span>Cloudflare</span>),
+// anywhere else they vanish (東<em>京</em>都 stays 東京都).
+const GLUE = '\u0000';
+const LATIN = /(?![\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}])[\p{L}\p{N}]/u;
+const unglue = (s) =>
+  s.replace(/\u0000+/g, (g, at) => (LATIN.test(s[at - 1] ?? '') && LATIN.test(s[at + g.length] ?? '') ? ' ' : ''));
+const clean = (s) => unglue(decodeEntities(s)).replace(/\s+/g, ' ').trim();
+const text = (s) => s.replaceAll(GLUE, '');
 
 /**
  * Walk the document collecting text inside the first element that satisfies
@@ -49,7 +58,7 @@ function collect(html, isRoot, skip) {
   TAG.lastIndex = 0;
   let m;
   while ((m = TAG.exec(html))) {
-    if (rootTag && !skipTag) out += html.slice(last, m.index);
+    if (rootTag && !skipTag) out += text(html.slice(last, m.index));
     last = TAG.lastIndex;
     if (!m[2]) continue; // comment / doctype
     const closing = m[1] === '/';
@@ -61,13 +70,13 @@ function collect(html, isRoot, skip) {
       const close = new RegExp(`</${tag}`, 'ig');
       close.lastIndex = TAG.lastIndex;
       const stop = close.exec(html)?.index ?? html.length;
-      if (rootTag && !skipTag && !ALWAYS_SKIP.has(tag) && tag !== 'title') out += html.slice(TAG.lastIndex, stop);
+      if (rootTag && !skipTag && !ALWAYS_SKIP.has(tag) && tag !== 'title') out += text(html.slice(TAG.lastIndex, stop));
       TAG.lastIndex = stop;
       last = stop;
       continue;
     }
 
-    if (rootTag && BLOCK.has(tag)) out += ' ';
+    if (rootTag) out += BLOCK.has(tag) ? ' ' : GLUE;
 
     if (skipTag) {
       if (tag === skipTag && !selfClosing) skipDepth += closing ? -1 : 1;
@@ -89,13 +98,13 @@ function collect(html, isRoot, skip) {
       rootDepth = 1;
     }
   }
-  if (rootTag) out += html.slice(last);
+  if (rootTag) out += text(html.slice(last));
   return rootTag || rootDone ? clean(out) : null;
 }
 
 function innerText(html, tag) {
   const m = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, 'i').exec(html);
-  return m ? clean(m[1].replace(TAG, '')) : '';
+  return m ? clean(text(m[1]).replace(TAG, GLUE)) : '';
 }
 
 /**

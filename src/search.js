@@ -154,6 +154,10 @@ export class SagasuIndex {
   _word(term, { isLast, prefix, fuzzy }, needles) {
     const out = new Map();
     if (this._weighted(term, 1, out)) needles.push({ text: term, word: true });
+    if (!(prefix && isLast) && term.length >= 3) {
+      // not typing this word any more: still treat simple plurals as the same word
+      for (const t of [term + 's', term + 'es']) if (this._weighted(t, 0.9, out)) needles.push({ text: t, word: true });
+    }
     let found = out.size > 0;
     if (prefix && isLast && term.length >= 2) {
       const v = this.words;
@@ -256,6 +260,9 @@ export class SagasuIndex {
     }
 
     for (const alts of excluded) {
+      // -email also drops pages that only say "emails"
+      const plural = alts.filter((a) => a.kind === 'word').flatMap((a) => [a.text + 's', a.text + 'es']);
+      for (const t of plural) for (const d of this.scores(t)?.keys() ?? []) scored.delete(d);
       const m = this._evalUnit(alts, { ...opts, prefix: false, fuzzy: false }, []);
       for (const d of m.keys()) scored.delete(d);
     }

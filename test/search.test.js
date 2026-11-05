@@ -69,6 +69,13 @@ test('AND, mixed scripts, exclusion', () => {
   assert.deepEqual(urls('型 javascript'), ['/ts']);
   assert.deepEqual(urls('javascript -typescript'), ['/js']);
   assert.deepEqual(urls('javascript -型'), ['/js']);
+  const x = createIndex([
+    { url: '/a', title: 'commit', text: 'check emails' },
+    { url: '/b', title: 'commit', text: 'nothing else' },
+  ]);
+  assert.deepEqual(x.search('commit -email').map((h) => h.url), ['/b']);
+  const y = createIndex([{ url: '/p', title: 'many commits', text: 'and emails' }]);
+  assert.deepEqual(y.search('commit email').map((h) => h.url), ['/p']);
 });
 
 test('falls back to partial matches when AND finds nothing', () => {

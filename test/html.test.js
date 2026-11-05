@@ -28,6 +28,12 @@ test('inline tags do not split Japanese words', () => {
   assert.equal(extract(page('<main><p>東<em>京</em>都</p></main>')).text, '東京都');
 });
 
+test('adjacent inline tags with latin text become separate words', () => {
+  const r = extract(page('<main><h1>T<span>ag</span>s</h1><p><span>Solo dev</span><span>Cloudflare</span><a>Architecture</a>は<b>ok</b>です</p></main>'));
+  assert.equal(r.text, 'T ag s Solo dev Cloudflare Architectureはokです');
+  assert.equal(extract(page('<main><h1><span>Solo</span><span>Dev</span></h1></main>')).title, 'Solo Dev');
+});
+
 test('[data-sagasu-body] wins over <main>', () => {
   const r = extract(page('<main><p>周辺</p><article data-sagasu-body><p>ここだけ</p></article></main>'));
   assert.equal(r.text, 'ここだけ');
