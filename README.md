@@ -1,11 +1,15 @@
 # sagasu（探す）
 
+```sh
+npm i -D @paibot/sagasu
+```
+
 **日本語がちゃんと引ける、依存ゼロの静的サイト検索。**
 
 `ramen` でも `ﾗｰﾒﾝ` でも `らーめん` でも「ラーメン」が見つかる。`javascirpt` と打ち間違えても見つかる。辞書も形態素解析器もサーバーもいらない。ビルドした HTML のフォルダに CLI を一回かけて、`<sagasu-search>` を1行置けば ⌘K の検索窓ができます。
 
 ```
-$ npx sagasu build dist
+$ npx @paibot/sagasu build dist
 ✔ 71 ページ → dist/sagasu.json
   語彙 10,488 / 608.2 KB (gzip 171.2 KB) / 144 ms
 
@@ -41,12 +45,12 @@ $ npx sagasu search dist/sagasu.json あーきてくちゃ
 ### 1. 静的サイト（Astro / Hugo / 11ty / Next の export など）
 
 ```sh
-npm i -D sagasu
+npm i -D @paibot/sagasu
 npx sagasu build dist          # dist/**/*.html → dist/sagasu.json
 ```
 
 ```html
-<script type="module">import 'sagasu/ui';</script>
+<script type="module">import '@paibot/sagasu/ui';</script>
 <sagasu-search src="/sagasu.json"></sagasu-search>
 ```
 
@@ -73,7 +77,7 @@ sagasu build <dir>
 ### 2. JavaScript から
 
 ```js
-import { createIndex } from 'sagasu';
+import { createIndex } from '@paibot/sagasu';
 
 const idx = createIndex([
   { url: '/ramen', title: '博多ラーメンの名店', text: 'とんこつスープが自慢…', meta: { tag: 'food' } },
@@ -89,13 +93,13 @@ idx.search('ramen');
 
 ```js
 // build
-import { IndexBuilder } from 'sagasu';
+import { IndexBuilder } from '@paibot/sagasu';
 const b = new IndexBuilder({ titleWeight: 3, excerptLength: 3000 });
 for (const post of posts) b.add({ url: post.url, title: post.title, text: post.body });
 fs.writeFileSync('dist/sagasu.json', JSON.stringify(b.toJSON()));
 
 // browser
-import { SagasuIndex } from 'sagasu';
+import { SagasuIndex } from '@paibot/sagasu';
 const idx = await SagasuIndex.load('/sagasu.json');
 const hits = idx.search('東京 -京都', { limit: 20, filter: (meta) => meta.lang === 'ja' });
 hits.total; // 全件数
@@ -201,4 +205,4 @@ MIT
 
 ## English
 
-**sagasu** is a zero-dependency full-text search engine for static sites that actually handles Japanese: it folds full/half width and katakana/hiragana, accepts romaji (`ramen` → ラーメン), tolerates typos (`javascirpt`), ranks with BM25 over character bigrams with a phrase-contiguity re-rank, highlights matches in the original text, and ships a ⌘K web component. `npx sagasu build dist` indexes any folder of built HTML; `<sagasu-search src="/sagasu.json">` adds the UI. ~1,000 lines, no runtime dependencies.
+**sagasu** is a zero-dependency full-text search engine for static sites that actually handles Japanese: it folds full/half width and katakana/hiragana, accepts romaji (`ramen` → ラーメン), tolerates typos (`javascirpt`), ranks with BM25 over character bigrams with a phrase-contiguity re-rank, highlights matches in the original text, and ships a ⌘K web component. `npx @paibot/sagasu build dist` indexes any folder of built HTML; `<sagasu-search src="/sagasu.json">` adds the UI. ~1,000 lines, no runtime dependencies.
